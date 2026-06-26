@@ -22,9 +22,14 @@ if "complaint_text" not in st.session_state:
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Load model
-model = joblib.load("complaint_model.pkl")
-vectorizer = joblib.load("tfidf_vectorizer.pkl")
+# Load model — cached so it doesn't reload every interaction
+@st.cache_resource
+def load_models():
+    model = joblib.load("complaint_model.pkl")
+    vectorizer = joblib.load("tfidf_vectorizer.pkl")
+    return model, vectorizer
+
+model, vectorizer = load_models()
 
 # Main UI
 st.title("AI-Powered Customer Complaint Analyzer")
@@ -61,8 +66,11 @@ if analyze_clicked:
         probabilities = model.predict_proba(input_vector)[0]
         confidence = max(probabilities) * 100
 
+        # Clean up label for display
+        display_prediction = prediction.replace("_", " ").title()
+
         st.subheader("Predicted Category")
-        st.success(prediction)
+        st.success(display_prediction)
 
         st.subheader("Confidence Score")
         st.info(f"{confidence:.2f}%")
@@ -70,7 +78,7 @@ if analyze_clicked:
         prompt = f"""
 You are an AI customer support assistant.
 
-A machine learning model classified this complaint as: {prediction}
+A machine learning model classified this complaint as: {display_prediction}
 Confidence score: {confidence:.2f}%
 
 Customer complaint:

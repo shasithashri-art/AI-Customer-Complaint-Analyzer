@@ -75,6 +75,9 @@ if analyze_clicked:
         st.subheader("Confidence Score")
         st.info(f"{confidence:.2f}%")
 
+        if confidence < 70:
+            st.warning("⚠️ Low confidence prediction. This complaint may require manual review by a human agent.")
+
         prompt = f"""
 You are an AI customer support assistant.
 
